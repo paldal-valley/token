@@ -1,0 +1,29 @@
+{
+  "name": "token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paldal-valley/token.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paldal-valley/token/issues"
+  },
+  "homepage": "https://github.com/paldal-valley/token#readme",
+  "devDependencies": {
+    "openzeppelin-solidity": "^1.11.0",
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.0.0",
+    "chai-bignumber": "^2.0.2"
+  }
+}
