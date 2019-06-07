@@ -69,10 +69,8 @@ contract Doajou is Ownable, DoaToken {
 
         // 환불 금액 및 환불 수수료 책정
         uint256 refundAmount = guarantee.mul(9).div(10); // 90%
-        uint256 refundFee = guarantee.div(10);
+        uint256 refundFee = guarantee.div(10); // 10%
 
-        /* transfer이 아닌 this.transfer을 사용 */
-        /* this == owner */
         // questioner에게 guarantee의 90% 환불
         super.transfer(questioner, refundAmount);
         refundRevenue = refundRevenue.add(refundFee);
@@ -81,11 +79,10 @@ contract Doajou is Ownable, DoaToken {
         questionGuaranteeTable[questioner][questionId] = 0;
     }
 
-    //    function answerSelected() public {
-    //        // tokenTable 유효성 검사한다
-    //        // 검증통과시 delegator는 답변자에게 amount만큼의 토큰을 보낸다
-    //        transferFrom();
-    //    }
+    function answerSelected() public {
+        // tokenTable 유효성 검사한다
+        // 검증통과시 delegator는 답변자에게 amount만큼의 토큰을 보낸다
+    }
 
     /* manager가 refund fee로 벌어들인 token 수익을 owner에게 반환하는 함수 */
     /* onlyManager */
