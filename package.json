@@ -21,9 +21,9 @@
   },
   "homepage": "https://github.com/paldal-valley/token#readme",
   "devDependencies": {
-    "openzeppelin-solidity": "^1.11.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.0.0",
-    "chai-bignumber": "^2.0.2"
+    "chai-bignumber": "^2.0.2",
+    "openzeppelin-solidity": "^1.11.0"
   }
 }
