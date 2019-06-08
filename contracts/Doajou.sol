@@ -8,8 +8,8 @@ contract Doajou is Ownable, DoaToken {
     using SafeMath for uint256;
 
     constructor(address _manager, string _name, string _symbol, uint8 _decimals)
-    DoaToken(_name, _symbol, _decimals)
-    Ownable() public
+        DoaToken(_name, _symbol, _decimals)
+        Ownable() public
     {
         manager = _manager;
     }
@@ -22,6 +22,7 @@ contract Doajou is Ownable, DoaToken {
 
     /* question maps */
     mapping (uint32 => QuestionInfo) public questionMap;
+    mapping (address => bool) public isWelcomeTokenGiven;
 
     address public manager;
     uint256 internal refundRevenue;
@@ -34,13 +35,17 @@ contract Doajou is Ownable, DoaToken {
     string internal constant NOT_ENOUGH_TOKENS = 'Not enough tokens';
     string internal constant AMOUNT_ZERO = 'Amount can not be 0';
 
+    uint256 internal constant WELCOME_TOKEN_AMOUNT = 1000;
     uint256 internal constant MAX_QUESTION_GUARANTEE = 50000;
 
     function getRefundRevenue() public view returns (uint256) {
         return refundRevenue;
     }
 
-    /* for external use of mapping value */
+    /**
+    * getter and setter
+    */
+
     function getQuestionOwner(uint32 questionId) public view returns (address) {
         return questionMap[questionId].questioner;
     }
@@ -53,13 +58,25 @@ contract Doajou is Ownable, DoaToken {
         return questionMap[questionId].selectedAnswerer;
     }
 
-    /* 질문 생성 시 guarantee 테이블에 기록 */
     /* onlyQuestioner */
     function setQuestionMaps(uint32 questionId, uint256 guarantee) internal {
-        require(getSelectedAnswerer(questionId) == 0);
+        require(getQuestionOwner(questionId) == address(0));
+        require(getSelectedAnswerer(questionId) == address(0));
         require(getQuestionGuarantee(questionId) == 0);
 
         questionMap[questionId] = QuestionInfo(msg.sender, 0, guarantee);
+    }
+
+    /**
+    * business logic
+    */
+
+    /* onlyOwner */
+    function offerWelcomeToken(address newbie) public onlyOwner {
+        require(isWelcomeTokenGiven[newbie] == false);
+
+        super.transfer(newbie, WELCOME_TOKEN_AMOUNT);
+        isWelcomeTokenGiven[newbie] = true;
     }
 
     /* 질문 생성 시 실행 */
@@ -76,7 +93,6 @@ contract Doajou is Ownable, DoaToken {
 
     /* 질문 삭제 시 실행 */
     /* onlyManager */
-    //TODO: questionidtoquestioner
     function removeQuestion(uint32 questionId) public {
         require(getQuestionOwner(questionId) != 0);
 
@@ -96,10 +112,11 @@ contract Doajou is Ownable, DoaToken {
         questionMap[questionId].guarantee = 0;
     }
 
+    /* 답변 채택 시 실행 */
     /* onlyManager */
     function answerSelected(uint32 questionId, address answerer) public {
-        require(getQuestionGuarantee(questionId) != 0);
-        require(getSelectedAnswerer(questionId) == 0);
+        require(getQuestionOwner(questionId) != address(0));
+        require(getSelectedAnswerer(questionId) == address(0));
 
         uint256 guarantee = getQuestionGuarantee(questionId);
         super.transfer(answerer, guarantee);
@@ -111,7 +128,6 @@ contract Doajou is Ownable, DoaToken {
     /* manager가 refund fee로 벌어들인 token 수익을 owner에게 반환하는 함수 */
     /* onlyManager */
     function takeRefundRevenue() public {
-        /* msg.sender == manager */
         super.transfer(owner, refundRevenue);
         refundRevenue = 0;
     }
