@@ -7,8 +7,17 @@ import "./DoaToken.sol";
 contract Doajou is Ownable, DoaToken {
     using SafeMath for uint256;
 
-    // questioner -> questionId -> deposit amount
-    mapping (address => mapping (uint32 => uint256)) public questionGuaranteeTable;
+    struct QuestionInfo {
+        address questioner;
+        address selectedAnswerer;
+        uint256 guarantee;
+    }
+    /* question maps */
+    // questionId -> deposit amount
+    mapping (uint32 => uint256) public questionGuaranteeTable;
+    mapping (uint32 => address) public questionIdToQuestioner;
+
+    mapping (uint32 => QuestionInfo) public questionMap;
 
     constructor(address _manager, string _name, string _symbol, uint8 _decimals)
         DoaToken(_name, _symbol, _decimals)
@@ -35,16 +44,28 @@ contract Doajou is Ownable, DoaToken {
     }
 
     /* for external use of mapping value */
-    function getGuaranteeAmount(address questioner, uint32 questionId) public view returns (uint256) {
-        return questionGuaranteeTable[questioner][questionId];
+    function getQuestionOwner(uint32 questionId) public view returns (address) {
+        return questionMap[questionId].questioner;
+    }
+
+    function getQuestionGuarantee(uint32 questionId) public view returns (uint256) {
+        return questionMap[questionId].guarantee;
+    }
+
+    function getSelectedAnswerer(uint32 questionId) public view returns (address) {
+        return questionMap[questionId].selectedAnswerer;
     }
 
     /* 질문 생성 시 guarantee 테이블에 기록 */
-    function addQuestionGuarantee(uint32 questionId, uint256 guarantee) internal {
-        address questioner = msg.sender;
-        require(questionGuaranteeTable[questioner][questionId] == 0);
+    /* onlyQuestioner */
+    function setQuestionMaps(uint32 questionId, uint256 guarantee) internal {
+        require(getSelectedAnswerer(questionId) == 0);
+        require(getQuestionGuarantee(questionId) == 0);
 
-        questionGuaranteeTable[questioner][questionId] = guarantee;
+//        questionGuaranteeTable[questionId] = guarantee;
+//        questionIdToQuestioner[questionId] = msg.sender;
+
+        questionMap[questionId] = QuestionInfo(msg.sender, 0, guarantee);
     }
 
     /* 질문 생성 시 실행 */
@@ -55,17 +76,22 @@ contract Doajou is Ownable, DoaToken {
         require(balanceOf(questioner) >= guarantee);
         require(guarantee <= MAX_QUESTION_GUARANTEE);
 
-        addQuestionGuarantee(questionId, guarantee);
+        setQuestionMaps(questionId, guarantee);
         super.transfer(manager, guarantee);
     }
 
     /* 질문 삭제 시 실행 */
     /* onlyManager */
-    function removeQuestion(address questioner, uint32 questionId) public {
-        require(questionGuaranteeTable[questioner][questionId] != 0);
+    //TODO: questionidtoquestioner
+    function removeQuestion(uint32 questionId) public {
+        require(getQuestionOwner(questionId) != 0);
 
         // tokenTable 참조
-        uint256 guarantee = questionGuaranteeTable[questioner][questionId];
+//        uint256 guarantee = questionGuaranteeTable[questionId];
+//        address questioner = questionIdToQuestioner[questionId];
+
+        address questioner = getQuestionOwner(questionId);
+        uint256 guarantee = getQuestionGuarantee(questionId);
 
         // 환불 금액 및 환불 수수료 책정
         uint256 refundAmount = guarantee.mul(9).div(10); // 90%
@@ -76,12 +102,20 @@ contract Doajou is Ownable, DoaToken {
         refundRevenue = refundRevenue.add(refundFee);
 
         // token table로부터 guarantee 차감
-        questionGuaranteeTable[questioner][questionId] = 0;
+//        questionGuaranteeTable[questionId] = 0;
+        questionMap[questionId].guarantee = 0;
     }
 
-    function answerSelected() public {
-        // tokenTable 유효성 검사한다
-        // 검증통과시 delegator는 답변자에게 amount만큼의 토큰을 보낸다
+    /* onlyManager */
+    function answerSelected(uint32 questionId, address answerer) public {
+        require(getQuestionGuarantee(questionId) != 0);
+        require(getSelectedAnswerer(questionId) == 0);
+
+        uint256 guarantee = getQuestionGuarantee(questionId);
+        super.transfer(answerer, guarantee);
+
+        questionMap[questionId].selectedAnswerer = answerer;
+        questionMap[questionId].guarantee = 0;
     }
 
     /* manager가 refund fee로 벌어들인 token 수익을 owner에게 반환하는 함수 */
