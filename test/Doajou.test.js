@@ -19,6 +19,7 @@ contract('Doajou', ([
     const _tokenSymbol = 'DOAT'
     const _tokenDecimals = 18
 
+    const WELCOME_TOKEN_AMOUNT = 1000
     const QUESTIONER_BALANCE = 100000
     const ANSWERER_BALANCE = 100000
 
@@ -43,6 +44,24 @@ contract('Doajou', ([
       manager.should.equal(_manager)
     })
 
+    it('offer welcome token to newbie correctly', async function() {
+      let balance = await this.doajou.balanceOf(accounts[0])
+      balance.should.be.bignumber.equal(0)
+
+      await this.doajou.offerWelcomeToken(accounts[0], { from: _owner })
+
+      balance = await this.doajou.balanceOf(accounts[0])
+      balance.should.be.bignumber.equal(WELCOME_TOKEN_AMOUNT)
+    })
+
+    it('cannot give same user the welcome token twice', async function() {
+      await this.doajou.offerWelcomeToken(accounts[0], { from: _owner })
+      await expectThrow (
+        this.doajou.offerWelcomeToken(accounts[0], { from: _owner }),
+        EVMRevert
+      )
+    })
+
     it('create question correctly', async function() {
       /* create question */
       const GUARANTEE = 1000
@@ -60,7 +79,7 @@ contract('Doajou', ([
       guaranteeAmount.should.be.bignumber.equal(GUARANTEE)
     })
 
-    it('exceed guarantee exceeds max value', async function() {
+    it('cannot exceed max guarantee value', async function() {
       const GUARANTEE_TOO_BIG = 50001
       const QUESTION_ID = 33
 
@@ -99,9 +118,43 @@ contract('Doajou', ([
       refundRevenue.should.be.bignumber.equal(GUARANTEE * 0.1)
     })
 
-    it('', async function() {
-      // 질문 삭제후 같은 questionId로 질문을 올릴 수 있어야 함
-      // 질문 생성 없이 질문 삭제가 일어나면 안됨
+    it('cannot remove the question never created', async function() {
+      const QUESTION_ID = 33
+
+      await expectThrow(
+        this.doajou.removeQuestion(QUESTION_ID, { _manager }),
+        EVMRevert
+      )
+    })
+
+    it('answer question correctly', async function() {
+      const GUARANTEE = 1000
+      const QUESTION_ID = 33
+
+      // 질문 등록
+      await this.doajou.questionCreated(QUESTION_ID, GUARANTEE, { from: _questioner })
+
+      await this.doajou.answerSelected(QUESTION_ID, _answerer, { from: _manager })
+
+      const questionerBalance = await this.doajou.balanceOf(_questioner)
+      questionerBalance.should.be.bignumber.equal(QUESTIONER_BALANCE - GUARANTEE)
+
+      const answererBalance = await this.doajou.balanceOf(_answerer)
+      answererBalance.should.be.bignumber.equal(ANSWERER_BALANCE + GUARANTEE)
+
+      const questionGuarantee = await this.doajou.getQuestionGuarantee(QUESTION_ID)
+      questionGuarantee.should.be.bignumber.equal(0)
+
+      const answerSelected = await this.doajou.getSelectedAnswerer(QUESTION_ID)
+      answerSelected.should.be.equal(_answerer)
+    })
+
+    it('connot answer the question never created', async function() {
+      const QUESTION_ID = 33
+      await expectThrow (
+        this.doajou.answerSelected(QUESTION_ID, _answerer),
+        EVMRevert
+      )
     })
   })
 })
