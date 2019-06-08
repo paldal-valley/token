@@ -56,7 +56,7 @@ contract('Doajou', ([
       const questionerBalance = await this.doajou.balanceOf(_questioner)
       questionerBalance.should.be.bignumber.equal(QUESTIONER_BALANCE - GUARANTEE)
 
-      const guaranteeAmount = await this.doajou.getGuaranteeAmount(_questioner, QUESTION_ID)
+      const guaranteeAmount = await this.doajou.getQuestionGuarantee(QUESTION_ID)
       guaranteeAmount.should.be.bignumber.equal(GUARANTEE)
     })
 
@@ -89,7 +89,7 @@ contract('Doajou', ([
       // 질문 등록
       await this.doajou.questionCreated(QUESTION_ID, GUARANTEE, { from: _questioner })
 
-      await this.doajou.removeQuestion(_questioner, QUESTION_ID, { from: _manager })
+      await this.doajou.removeQuestion(QUESTION_ID, { from: _manager })
 
       // guarantee의 90% 환불
       const questionerBalance = await this.doajou.balanceOf(_questioner)
