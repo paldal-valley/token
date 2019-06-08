@@ -7,24 +7,21 @@ import "./DoaToken.sol";
 contract Doajou is Ownable, DoaToken {
     using SafeMath for uint256;
 
+    constructor(address _manager, string _name, string _symbol, uint8 _decimals)
+    DoaToken(_name, _symbol, _decimals)
+    Ownable() public
+    {
+        manager = _manager;
+    }
+
     struct QuestionInfo {
         address questioner;
         address selectedAnswerer;
         uint256 guarantee;
     }
+
     /* question maps */
-    // questionId -> deposit amount
-    mapping (uint32 => uint256) public questionGuaranteeTable;
-    mapping (uint32 => address) public questionIdToQuestioner;
-
     mapping (uint32 => QuestionInfo) public questionMap;
-
-    constructor(address _manager, string _name, string _symbol, uint8 _decimals)
-        DoaToken(_name, _symbol, _decimals)
-        Ownable() public
-    {
-        manager = _manager;
-    }
 
     address public manager;
     uint256 internal refundRevenue;
@@ -62,9 +59,6 @@ contract Doajou is Ownable, DoaToken {
         require(getSelectedAnswerer(questionId) == 0);
         require(getQuestionGuarantee(questionId) == 0);
 
-//        questionGuaranteeTable[questionId] = guarantee;
-//        questionIdToQuestioner[questionId] = msg.sender;
-
         questionMap[questionId] = QuestionInfo(msg.sender, 0, guarantee);
     }
 
@@ -87,9 +81,6 @@ contract Doajou is Ownable, DoaToken {
         require(getQuestionOwner(questionId) != 0);
 
         // tokenTable 참조
-//        uint256 guarantee = questionGuaranteeTable[questionId];
-//        address questioner = questionIdToQuestioner[questionId];
-
         address questioner = getQuestionOwner(questionId);
         uint256 guarantee = getQuestionGuarantee(questionId);
 
@@ -102,7 +93,6 @@ contract Doajou is Ownable, DoaToken {
         refundRevenue = refundRevenue.add(refundFee);
 
         // token table로부터 guarantee 차감
-//        questionGuaranteeTable[questionId] = 0;
         questionMap[questionId].guarantee = 0;
     }
 
