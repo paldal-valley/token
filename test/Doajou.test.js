@@ -19,9 +19,9 @@ contract('Doajou', ([
     const _tokenSymbol = 'DOAT'
     const _tokenDecimals = 18
 
-    const WELCOME_TOKEN_AMOUNT = 1000
-    const QUESTIONER_BALANCE = 100000
-    const ANSWERER_BALANCE = 100000
+    const WELCOME_TOKEN_AMOUNT = 1000 * Math.pow(10, _tokenDecimals)
+    const QUESTIONER_BALANCE = 10000 * Math.pow(10, _tokenDecimals)
+    const ANSWERER_BALANCE = 10000 * Math.pow(10, _tokenDecimals)
 
     beforeEach(async function() {
       this.doajou = await Doajou.new(
@@ -64,7 +64,7 @@ contract('Doajou', ([
 
     it('create question correctly', async function() {
       /* create question */
-      const GUARANTEE = 1000
+      const GUARANTEE = 1000 * Math.pow(10, _tokenDecimals)
       const QUESTION_ID = 33
       await this.doajou.questionCreated(QUESTION_ID, GUARANTEE, { from: _questioner })
 
@@ -80,7 +80,7 @@ contract('Doajou', ([
     })
 
     it('cannot exceed max guarantee value', async function() {
-      const GUARANTEE_TOO_BIG = 50001
+      const GUARANTEE_TOO_BIG = 50001 * Math.pow(10, _tokenDecimals)
       const QUESTION_ID = 33
 
       await expectThrow(
@@ -90,7 +90,7 @@ contract('Doajou', ([
     })
 
     it('cannot arbitrarily change guarantee amount on an existing questionId', async function() {
-      const GUARANTEE = 1000
+      const GUARANTEE = 1000 * Math.pow(10, _tokenDecimals)
       const QUESTION_ID = 33
 
       await this.doajou.questionCreated(QUESTION_ID, GUARANTEE, { from: _questioner })
@@ -102,7 +102,7 @@ contract('Doajou', ([
     })
 
     it('remove question correctly', async function() {
-      const GUARANTEE = 1000
+      const GUARANTEE = 1000 * Math.pow(10, _tokenDecimals)
       const QUESTION_ID = 33
 
       // 질문 등록
@@ -128,7 +128,7 @@ contract('Doajou', ([
     })
 
     it('answer question correctly', async function() {
-      const GUARANTEE = 1000
+      const GUARANTEE = 1000 * Math.pow(10, _tokenDecimals)
       const QUESTION_ID = 33
 
       // 질문 등록
