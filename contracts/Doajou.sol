@@ -35,8 +35,8 @@ contract Doajou is Ownable, DoaToken {
     string internal constant NOT_ENOUGH_TOKENS = 'Not enough tokens';
     string internal constant AMOUNT_ZERO = 'Amount can not be 0';
 
-    uint256 internal constant WELCOME_TOKEN_AMOUNT = 1000;
-    uint256 internal constant MAX_QUESTION_GUARANTEE = 50000;
+    uint256 internal constant WELCOME_TOKEN_AMOUNT = 1000 * (10 ** 18);
+    uint256 internal constant MAX_QUESTION_GUARANTEE = 50000 * (10 ** 18);
 
     function getRefundRevenue() public view returns (uint256) {
         return refundRevenue;
@@ -81,7 +81,7 @@ contract Doajou is Ownable, DoaToken {
 
     /* 질문 생성 시 실행 */
     /* onlyQuestioner */
-    function questionCreated(uint32 questionId, uint256 guarantee) public payable {
+    function questionCreated(uint32 questionId, uint256 guarantee) public {
         address questioner = msg.sender;
         // questioner에게 guarantee 이상의 token이 있는지 확인
         require(balanceOf(questioner) >= guarantee);
