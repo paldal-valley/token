@@ -59,12 +59,12 @@ contract Doajou is Ownable, DoaToken {
     }
 
     /* onlyQuestioner */
-    function setQuestionMaps(uint32 questionId, uint256 guarantee) internal {
+    function setQuestionMaps(address questioner, uint32 questionId, uint256 guarantee) internal {
         require(getQuestionOwner(questionId) == address(0));
         require(getSelectedAnswerer(questionId) == address(0));
         require(getQuestionGuarantee(questionId) == 0);
 
-        questionMap[questionId] = QuestionInfo(msg.sender, 0, guarantee);
+        questionMap[questionId] = QuestionInfo(questioner, 0, guarantee);
     }
 
     /**
@@ -81,14 +81,13 @@ contract Doajou is Ownable, DoaToken {
 
     /* 질문 생성 시 실행 */
     /* onlyQuestioner */
-    function questionCreated(uint32 questionId, uint256 guarantee) public {
-        address questioner = msg.sender;
+    function questionCreated(address questioner, uint32 questionId, uint256 guarantee) public {
         // questioner에게 guarantee 이상의 token이 있는지 확인
         require(balanceOf(questioner) >= guarantee);
         require(guarantee <= MAX_QUESTION_GUARANTEE);
 
-        setQuestionMaps(questionId, guarantee);
-        super.transfer(manager, guarantee);
+        setQuestionMaps(questioner, questionId, guarantee);
+        super.transferFrom(questioner, manager, guarantee);
     }
 
     /* 질문 삭제 시 실행 */
